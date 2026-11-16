@@ -60,8 +60,7 @@ export const portfolio = {
   about: {
     heading: "About Me",
     paragraphs: [
-      "I build software that feels as considered as it looks. Interfaces, systems, and models — shaped together, so the result is calm on the surface and exact underneath.",
-      "The work runs from the screen in someone’s hands to the services behind it: product interfaces, APIs, data, and the evaluation loops that keep an intelligent system honest as it grows.",
+      "Full-Stack & AI Engineer with 8+ years across financial technology, enterprise SaaS, and AI-driven risk and compliance products. Combines application architecture and hands-on product engineering with practical LLM and agentic-AI integration, connecting complex backend workflows to clear, auditable user experiences. Known for taking ownership of defined product areas, improving reliability and delivery quality, and translating demanding business processes into maintainable software with measurable operational value.",
     ],
   },
   skills: {
