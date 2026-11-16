@@ -71,52 +71,46 @@ function RoseLeaf({
   )
 }
 
-type Splash = { play: (amount: number) => void; warm: () => void; close: () => void }
+type Splash = { play: (amount: number) => void; quiet: () => void; warm: () => void; close: () => void }
 
 function createSplash(): Splash {
-  let context: AudioContext | null = null
-  let last = 0
+  let audio: HTMLAudioElement | null = null
   const ensure = () => {
-    const Ctx = window.AudioContext
-    if (!Ctx) return null
-    if (!context) context = new Ctx()
-    if (context.state === "suspended") void context.resume()
-    return context
+    if (!audio) {
+      audio = new Audio("/water_sound.mp3")
+      audio.preload = "auto"
+      audio.loop = true
+    }
+    return audio
   }
   return {
     warm() {
-      ensure()
+      const clip = ensure()
+      clip.volume = 0
+      const started = clip.play()
+      if (!started) return
+      void started
+        .then(() => {
+          clip.pause()
+          clip.currentTime = 0
+        })
+        .catch(() => {})
     },
     play(amount: number) {
-      const ready = ensure()
-      if (!ready || ready.state !== "running") return
-      const now = ready.currentTime
-      if (now - last < 0.24) return
-      last = now
-      const duration = 0.16 + Math.min(amount, 1) * 0.18
-      const length = Math.max(1, Math.floor(ready.sampleRate * duration))
-      const buffer = ready.createBuffer(1, length, ready.sampleRate)
-      const data = buffer.getChannelData(0)
-      let held = 0
-      for (let i = 0; i < length; i += 1) {
-        held = held * 0.84 + (Math.random() * 2 - 1) * 0.16
-        data[i] = held * Math.sin((i / length) * Math.PI)
-      }
-      const source = ready.createBufferSource()
-      source.buffer = buffer
-      const filter = ready.createBiquadFilter()
-      filter.type = "lowpass"
-      filter.frequency.value = 780
-      const gain = ready.createGain()
-      gain.gain.value = Math.min(0.16, 0.04 + amount * 0.1)
-      source.connect(filter)
-      filter.connect(gain)
-      gain.connect(ready.destination)
-      source.start()
+      const clip = ensure()
+      clip.volume = Math.min(0.9, 0.28 + amount * 0.55)
+      if (clip.paused) void clip.play().catch(() => {})
+    },
+    quiet() {
+      if (!audio || audio.paused) return
+      audio.pause()
+      audio.currentTime = 0
     },
     close() {
-      void context?.close()
-      context = null
+      if (!audio) return
+      audio.pause()
+      audio.src = ""
+      audio = null
     },
   }
 }
@@ -406,6 +400,7 @@ export function Arrangement({ anchors }: { anchors: RefObject<Anchors> }) {
     }
     const energy = Math.hypot(wave.vx, wave.vz)
     if (energy > 0.45) splash.current?.play(Math.min(1, energy / 2.2))
+    else splash.current?.quiet()
 
     const left = leftLift.current
     const right = rightLift.current
